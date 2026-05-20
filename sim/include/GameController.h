@@ -21,9 +21,25 @@ class GameController : public QObject {
   void updateGamepadCommand(GamepadCommand &gamepadCommand);
   void findNewController();
   ~GameController();
+ protected:
+  bool eventFilter(QObject *obj, QEvent *event) override;
 
  private:
+  void updateKeyboardAxes();
+
   QGamepad *_qGamepad = nullptr;
+
+  bool _keyW = false;
+  bool _keyS = false;
+  bool _keyA = false;
+  bool _keyD = false;
+  bool _keyQ = false;
+  bool _keyE = false;
+
+  float _keyboardLX = 0.f;
+  float _keyboardLY = 0.f;
+  float _keyboardRX = 0.f;
+  float _keyboardRY = 0.f;
 };
 
 #endif  // PROJECT_GAMECONTROLLER_H

@@ -12,6 +12,9 @@
 
 #include <QtCore/QObject>
 #include <QtGamepad/QGamepad>
+#include <QApplication>
+#include <QEvent>
+#include <QKeyEvent>
 
 /*!
  * By default, the game controller selects the "first" joystick, printing a
@@ -20,9 +23,35 @@
  * It is possible to change/add a joystick later with findNewController
  */
 GameController::GameController(QObject *parent) : QObject(parent) {
+  if (qApp) {
+    qApp->installEventFilter(this);
+  }
+
   findNewController();
 }
 
+static void printKeyboardTeleopHelpOnce() {
+  static bool printed = false;
+
+  if (printed) {
+    return;
+  }
+
+  printed = true;
+
+  printf("\n");
+  printf("[Keyboard Teleop] No gamepad detected. Using keyboard fallback.\n");
+  printf("[Keyboard Teleop] Click on the simulator window first, then use:\n");
+  printf("[Keyboard Teleop]   W       : move forward\n");
+  printf("[Keyboard Teleop]   S       : move backward\n");
+  printf("[Keyboard Teleop]   A       : strafe left\n");
+  printf("[Keyboard Teleop]   D       : strafe right\n");
+  printf("[Keyboard Teleop]   Q       : turn left\n");
+  printf("[Keyboard Teleop]   E       : turn right\n");
+  printf("[Keyboard Teleop]   SPACE   : stop command\n");
+  printf("\n");
+  fflush(stdout);
+}
 /*!
  * Re-run the joystick finding code to select the "first" joystick. This can be
  * used to set up the joystick if the simulator is started without a joystick
@@ -36,9 +65,8 @@ void GameController::findNewController() {
   auto gamepadList = QGamepadManager::instance()->connectedGamepads();
   printf("[Gamepad] Done searching for gamepads.\n");
   if (gamepadList.empty()) {
-    printf(
-        "[ERROR: GameController] No controller was connected! All joystick "
-        "commands will be zero!\n");
+    printf("[GameController] No physical gamepad connected. Using keyboard fallback.\n");
+    printKeyboardTeleopHelpOnce();
   } else {
     if (gamepadList.size() > 1) {
       printf(
@@ -79,10 +107,90 @@ void GameController::updateGamepadCommand(GamepadCommand &gamepadCommand) {
     gamepadCommand.rightStickAnalog =
         Vec2<float>(_qGamepad->axisRightX(), -_qGamepad->axisRightY());
   } else {
-    gamepadCommand.zero();  // no joystick, return all zeros
+    gamepadCommand.zero();
+
+    gamepadCommand.leftStickAnalog = Vec2<float>(_keyboardLX, _keyboardLY);
+    gamepadCommand.rightStickAnalog = Vec2<float>(_keyboardRX, _keyboardRY);
   }
 
   // printf("%s\n", gamepadCommand.toString().c_str());
 }
 
-GameController::~GameController() { delete _qGamepad; }
+void GameController::updateKeyboardAxes() {
+  constexpr float linear = 0.35f;
+  constexpr float yaw = 0.35f;
+
+  _keyboardLX = 0.f;
+  _keyboardLY = 0.f;
+  _keyboardRX = 0.f;
+  _keyboardRY = 0.f;
+
+  if (_keyW) _keyboardLY += linear;
+  if (_keyS) _keyboardLY -= linear;
+
+  if (_keyA) _keyboardLX -= linear;
+  if (_keyD) _keyboardLX += linear;
+
+  if (_keyQ) _keyboardRX -= yaw;
+  if (_keyE) _keyboardRX += yaw;
+}
+
+bool GameController::eventFilter(QObject *obj, QEvent *event) {
+  if (event->type() != QEvent::KeyPress &&
+      event->type() != QEvent::KeyRelease) {
+    return QObject::eventFilter(obj, event);
+  }
+
+  QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+
+  if (keyEvent->isAutoRepeat()) {
+    return QObject::eventFilter(obj, event);
+  }
+
+  const bool pressed = event->type() == QEvent::KeyPress;
+
+  switch (keyEvent->key()) {
+    case Qt::Key_W:
+      _keyW = pressed;
+      break;
+
+    case Qt::Key_S:
+      _keyS = pressed;
+      break;
+
+    case Qt::Key_A:
+      _keyA = pressed;
+      break;
+
+    case Qt::Key_D:
+      _keyD = pressed;
+      break;
+
+    case Qt::Key_Q:
+      _keyQ = pressed;
+      break;
+
+    case Qt::Key_E:
+      _keyE = pressed;
+      break;
+
+    case Qt::Key_Space:
+      _keyW = _keyS = _keyA = _keyD = _keyQ = _keyE = false;
+      break;
+
+    default:
+      return QObject::eventFilter(obj, event);
+  }
+
+  updateKeyboardAxes();
+
+  return QObject::eventFilter(obj, event);
+}
+
+GameController::~GameController() {
+  if (qApp) {
+    qApp->removeEventFilter(this);
+  }
+
+  delete _qGamepad;
+}
