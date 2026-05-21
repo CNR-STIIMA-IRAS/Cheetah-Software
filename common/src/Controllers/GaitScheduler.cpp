@@ -9,6 +9,7 @@
  */
 
 #include "Controllers/GaitScheduler.h"
+#include "Utilities/PerfLogger.h"
 
 /*=========================== Gait Data ===============================*/
 /**
@@ -90,6 +91,7 @@ void GaitScheduler<T>::initialize() {
  */
 template <typename T>
 void GaitScheduler<T>::step() {
+  PERF_SAMPLE("gait_scheduler");
 
   // Modify the gait with settings
   modifyGait();

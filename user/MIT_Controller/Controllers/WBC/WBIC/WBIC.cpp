@@ -2,6 +2,7 @@
 #include <Utilities/Timer.h>
 #include <eigen3/Eigen/LU>
 #include <eigen3/Eigen/SVD>
+#include "Utilities/PerfLogger.h"
 
   template <typename T>
 WBIC<T>::WBIC(size_t num_qdot, const std::vector<ContactSpec<T>*>* contact_list,
@@ -16,6 +17,7 @@ WBIC<T>::WBIC(size_t num_qdot, const std::vector<ContactSpec<T>*>* contact_list,
 
 template <typename T>
 void WBIC<T>::MakeTorque(DVec<T>& cmd, void* extra_input) {
+  PERF_SAMPLE("wbc_wbic_torque");
   if (!WB::b_updatesetting_) {
     printf("[Wanning] WBIC setting is not done\n");
   }

@@ -1,6 +1,7 @@
 #include "WBC_Ctrl.hpp"
 #include <Utilities/Utilities_print.h>
 #include <Utilities/Timer.h>
+#include "Utilities/PerfLogger.h"
 
 template<typename T>
 WBC_Ctrl<T>::WBC_Ctrl(FloatingBaseModel<T> model):
@@ -68,6 +69,7 @@ void WBC_Ctrl<T>::_ComputeWBC() {
 
 template<typename T>
 void WBC_Ctrl<T>::run(void* input, ControlFSMData<T> & data){
+  PERF_SAMPLE("wbc_ctrl_run");
   ++_iter;
 
   // Update Model

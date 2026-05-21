@@ -9,6 +9,7 @@
  */
 
 #include "Controllers/LegController.h"
+#include "Utilities/PerfLogger.h"
 
 /*!
  * Zero the leg command so the leg will not output torque
@@ -82,6 +83,7 @@ void LegController<T>::edampCommand(RobotType robot, T gain) {
  */
 template <typename T>
 void LegController<T>::updateData(const SpiData* spiData) {
+  PERF_SAMPLE("low_level_update_data");
   for (int leg = 0; leg < 4; leg++) {
     // q:
     datas[leg].q(0) = spiData->q_abad[leg];
@@ -129,6 +131,7 @@ void LegController<T>::updateData(const TiBoardData* tiBoardData) {
  */
 template <typename T>
 void LegController<T>::updateCommand(SpiCommand* spiCommand) {
+  PERF_SAMPLE("low_level_update_command");
   for (int leg = 0; leg < 4; leg++) {
     // tauFF
     Vec3<T> legTorque = commands[leg].tauFeedForward;

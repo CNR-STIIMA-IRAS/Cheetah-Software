@@ -1,5 +1,6 @@
 #include "GraphSearch.h"
 #include "Math/orientation_tools.h"
+#include "Utilities/PerfLogger.h"
 
 float FootplanCosts::distanceToGoal(FootplanState &state, FootplanGoal &goal) {
   Vec2<float> dp = state.pBase - goal.goalPos;

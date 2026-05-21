@@ -7,6 +7,7 @@
 #include "../../../../common/FootstepPlanner/GraphSearch.h"
 
 #include "Gait.h"
+#include "Utilities/PerfLogger.h"
 
 //#define DRAW_DEBUG_SWINGS
 //#define DRAW_DEBUG_PATH

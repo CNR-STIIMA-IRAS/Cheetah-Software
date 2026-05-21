@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <Utilities/Timer.h>
 #include <JCQP/QpProblem.h>
+#include "Utilities/PerfLogger.h"
 
 //#define K_PRINT_EVERYTHING
 #define BIG_NUMBER 5e10
@@ -296,6 +297,7 @@ Matrix<fpt,13,12> B_ct_r;
 
 void solve_mpc(update_data_t* update, problem_setup* setup)
 {
+  PERF_SAMPLE("mpc_solver_or_update");
   rs.set(update->p, update->v, update->q, update->w, update->r, update->yaw);
 #ifdef K_PRINT_EVERYTHING
 
